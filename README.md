@@ -22,6 +22,10 @@ To get started with the application, follow these steps:
 
 Ensure you have Docker and Docker Compose installed on your machine.
 
+### Accessing the Application
+
+1. Open your browser and go to [https://farm-manager-api-ggrn.onrender.com](https://farm-manager-api-ggrn.onrender.com). You will find the Swagger documentation for the API.
+
 ### Running the Application
 
 1. **Start the application**:
