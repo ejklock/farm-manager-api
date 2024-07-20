@@ -1,0 +1,39 @@
+version: '3.7'
+services:
+  app:
+    depends_on:
+      - db
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3333:3333'
+    networks:
+      - farmmanagerNetwork
+  db:
+    container_name: farmmanager-dev-db
+    environment:
+      POSTGRES_USER: farm
+      POSTGRES_PASSWORD: farm
+      POSTGRES_DB: farm
+      POSTGRES_INITDB_ARGS: --auth=password
+      SERVICE_NAME: postgres
+      SERVICE_TAGS: dev
+    image: postgres:15.2
+    networks:
+      - farmmanagerNetwork
+    ports:
+      - 55432:5432
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - ./docker-compose/postgres:/docker-entrypoint-initdb.d
+      - farmmanagerPgData:/var/lib/mysql
+
+networks:
+  farmmanagerNetwork:
+    driver: bridge
+volumes:
+  farmmanagerPgData:
+    driver: local
+    name: farmmanagerPgData
