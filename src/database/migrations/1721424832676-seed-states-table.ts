@@ -5,6 +5,7 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class SeedStatesTable1721424832676 implements MigrationInterface {
   private readonly addressService: AddressService;
+  private readonly chunkSize = 300;
 
   constructor() {
     this.addressService = new AddressService();
@@ -42,31 +43,42 @@ export class SeedStatesTable1721424832676 implements MigrationInterface {
     let stateIds = [];
     const states = await this.getStates();
 
-    await queryRunner.manager.transaction(async (transactionalManager) => {
-      const result = await transactionalManager
-        .createQueryBuilder()
-        .insert()
-        .into(StateEntity)
-        .values(states)
-        .orUpdate(['name', 'uf'], ['ibge_code'])
-        .execute();
+    for (let i = 0; i < states.length; i += this.chunkSize) {
+      const chunk = states.slice(i, i + this.chunkSize);
 
-      stateIds = result?.identifiers
-        ?.filter((identifier) => identifier?.id)
-        .map((identifier) => identifier?.id);
-    });
+      await queryRunner.manager.transaction(async (transactionalManager) => {
+        const result = await transactionalManager
+          .createQueryBuilder()
+          .insert()
+          .into(StateEntity)
+          .values(chunk)
+          .orUpdate(['name', 'uf'], ['ibge_code'])
+          .execute();
+
+        stateIds = [
+          ...stateIds,
+          ...result?.identifiers
+            ?.filter((identifier) => identifier?.id)
+            .map((identifier) => identifier?.id),
+        ];
+      });
+    }
 
     if (stateIds.length > 0) {
       const cities = await this.getCities(states);
-      await queryRunner.manager.transaction(async (transactionalManager) => {
-        await transactionalManager
-          .createQueryBuilder()
-          .insert()
-          .into(CityEntity)
-          .values(cities)
-          .orUpdate(['name', 'state_id'], ['ibge_code'])
-          .execute();
-      });
+      for (let i = 0; i < cities.length; i += this.chunkSize) {
+        const chunk = cities.slice(i, i + this.chunkSize);
+
+        await queryRunner.manager.transaction(async (transactionalManager) => {
+          await transactionalManager
+            .createQueryBuilder()
+            .insert()
+            .into(CityEntity)
+            .values(chunk)
+            .orUpdate(['name', 'state_id'], ['ibge_code'])
+            .execute();
+        });
+      }
     }
   }
 
