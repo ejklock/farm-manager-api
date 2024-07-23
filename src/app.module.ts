@@ -5,8 +5,8 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
 import appConfig from './config/app.config';
-import dbPgConfig from './config/db-pg.config';
-import { PostGreSqlDBConfigService } from './config/services/PostGreSqlDBConfigService';
+import dbConfig from './config/db.config';
+import { DbTypeOrmConfigService } from './config/services/db-typeorm-config.service';
 import storageConfig from './config/storage.config';
 import { HttpModule } from './http/http.module';
 import { StorageModule } from './storage/storage.module';
@@ -29,12 +29,12 @@ import { StorageModule } from './storage/storage.module';
       },
     }),
     ConfigModule.forRoot({
-      load: [dbPgConfig, appConfig, storageConfig],
+      load: [dbConfig, appConfig, storageConfig],
       isGlobal: true,
     }),
     TypeOrmModule.forRootAsync({
-      useClass: PostGreSqlDBConfigService,
-      inject: [PostGreSqlDBConfigService],
+      useClass: DbTypeOrmConfigService,
+      inject: [dbConfig.KEY],
     }),
 
     HttpModule,
